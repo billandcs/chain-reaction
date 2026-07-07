@@ -11,7 +11,9 @@ import {
   WalletCards,
 } from "lucide-react";
 import { PortfolioLineChart, TokenBarChart } from "@/components/portfolio-chart";
+import { MarketHistoryTable } from "@/components/market-history-table";
 import { getDashboardData } from "@/lib/repositories";
+import { getPriorityMarketHistory } from "@/lib/market-history";
 import { MetricTile, StatusPill } from "@/components/ui";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -19,7 +21,7 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const data = await getDashboardData();
+  const [data, marketHistory] = await Promise.all([getDashboardData(), getPriorityMarketHistory()]);
   const inflows = data.transfers.filter((transfer) =>
     data.wallets.some((wallet) => wallet.address === transfer.toAddress),
   );
@@ -88,6 +90,8 @@ export default async function DashboardPage() {
           ))}
         </div>
       </section>
+
+      <MarketHistoryTable rows={marketHistory} />
 
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1.55fr)_minmax(310px,0.72fr)_minmax(300px,0.62fr)]">
         <section className="rounded-lg border border-[#d8e0ec] bg-[#fbfcff] dark:border-[#1d2838] dark:bg-[#0b111c]">
