@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Brain, Tags, WalletCards } from "lucide-react";
+import { LabelManager } from "@/components/label-manager";
 import { listLabels, listWallets } from "@/lib/repositories";
 import { MetricTile, PageHeader, Panel, StatusPill } from "@/components/ui";
 
@@ -28,6 +29,10 @@ export default async function SmartMoneyPage() {
         <MetricTile label="Labels" value={String(labels.length)} detail="User-owned database" icon={Tags} tone="amber" />
         <MetricTile label="Tracked Wallets" value={String(wallets.length)} detail="Watchlist coverage" icon={WalletCards} />
       </div>
+
+      <Panel title="Label Management" eyebrow="Manual database, CSV backup, bulk upload">
+        <LabelManager wallets={wallets.map((wallet) => ({ id: wallet.id, name: wallet.name, address: wallet.address, chain: wallet.chain }))} />
+      </Panel>
 
       <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
         <Panel title="Wallet Scores" eyebrow="Transparent scoring">

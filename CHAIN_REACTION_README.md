@@ -179,6 +179,44 @@ Acceptance requirements:
 
 ## Milestones And Work Orders
 
+## Build Progress
+
+Status legend:
+
+- `[x]` Completed enough for the current local MVP.
+- `[~]` Partially implemented; usable foundation exists, but acceptance criteria are not fully complete.
+- `[ ]` Not started.
+- `[!]` Blocked by external credentials, provider access, or a missing local tool.
+
+Current implementation status:
+
+- `[!]` CR-001 GitHub Repo Automation: local git repo, commits, remote URL, CI, and `npm run github:init` script exist; remote repo creation/push is blocked until GitHub CLI or `GITHUB_TOKEN` is configured.
+- `[x]` CR-002 Project Scaffold: Next.js, TypeScript, Tailwind, Prisma, SQLite init script, ESLint, Prettier, `.env.example`, and app shell are implemented.
+- `[~]` CR-003 Local Settings Center: settings page and provider readiness checks exist; live RPC/GitHub connection tests still need provider credentials.
+- `[x]` CR-010 Prisma Schema And Database Design: core schema, SQLite init SQL, seed script, repositories, and demo data are implemented.
+- `[~]` CR-011 Wallet Watchlist: add/delete, chain, name, labels, tracking flag, validation, and responsive list exist; edit/search/filter still need refinement.
+- `[x]` CR-012 Wallet Profiler MVP: profile, balances, transactions, activity dates, top token, manual sync, empty/error states, and sync jobs are implemented.
+- `[x]` CR-020 Chain Adapter Interface: adapter interface, registry, mock adapter, readiness checks, and tests are implemented.
+- `[~]` CR-021 Ethereum Or Base Data Sync: sync pipeline, balances, transfers, transactions, and job status work through the mock adapter; real EVM provider calls still need implementation.
+- `[~]` CR-022 Price Data Adapter: CoinGecko top-volume market table and fallback data exist; token detail price pages and DexScreener/GeckoTerminal fallback still need implementation.
+- `[x]` CR-030 Portfolio Dashboard: local portfolio metrics, top holdings, inflows/outflows, market table, watchlist summary, charts, and empty states are implemented.
+- `[~]` CR-031 Wallet Flow Explorer: wallet profile shows recent transactions and synced transfers foundation; full counterparty explorer, filters, and sorting still need work.
+- `[~]` CR-032 Token Flow Page: tokens page shows exposure and latest flows; full token detail page with side-by-side price/flow analysis still needs work.
+- `[x]` CR-040 Local Wallet Label Database: manual label creation, label type, confidence, notes, source URL, CSV import, CSV export, bulk upload, and label display are implemented.
+- `[~]` CR-041 Smart Wallet Scoring: simple transparent local score is visible; scoring job and sortable score column still need work.
+- `[~]` CR-042 Smart Money Dashboard: score and label dashboard exists; top buys/sells, accumulations, and time filters still need work.
+- `[~]` CR-050 Alert Rules Engine: alert models, seed rule/event, and history UI exist; rule management and evaluation worker still need work.
+- `[~]` CR-051 Notification Channels: in-app alert history exists; read state and desktop notifications still need work.
+- `[~]` CR-060 AI Summary Engine: AI report storage and report library exist; generation endpoints/prompts still need work.
+- `[ ]` CR-061 Chat With Your Onchain Data.
+- `[~]` CR-070 Research-To-Action Panel: non-trading research guardrails are visible; token risk/liquidity/action panel still needs work.
+- `[x]` CR-071 Non-Custodial Trading Placeholder: trading remains disabled by feature flag and no private keys are stored.
+- `[x]` CR-080 App Layout: sidebar, mobile navigation, dark UI, responsive layout, and primary pages are implemented.
+- `[~]` CR-081 Data Visualization: portfolio, holdings, sparklines, and market table charts exist; wallet timeline and Smart Money accumulation charts still need work.
+- `[~]` CR-090 Testing: `npm test` works with adapter unit coverage; DB/API/UI smoke tests still need expansion.
+- `[x]` CR-091 GitHub Actions: CI workflow exists for install, lint, typecheck, test, and build; status badge waits for remote repo creation.
+- `[~]` CR-092 Local Backup And Export: wallet-label CSV export/import is implemented; full SQLite backup/restore and alert JSON export still need work.
+
 ## Milestone 0: Project Initialization
 
 ### CR-001: GitHub Repo Automation
@@ -899,4 +937,3 @@ The initial project is considered done when:
 - Local vector search over chain history.
 - Full local LLM support.
 - Optional non-custodial trading integration after MVP.
-
