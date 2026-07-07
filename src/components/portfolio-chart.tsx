@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { formatMonthDayUtc } from "@/lib/format";
 
 const colors = ["#38bdf8", "#f59e0b", "#818cf8", "#fb7185", "#a78bfa", "#94a3b8"];
 const gridColor = "rgba(148, 163, 184, 0.18)";
@@ -33,7 +34,7 @@ export function PortfolioLineChart({ data }: { data: { capturedAt: Date; totalVa
   }
 
   const chartData = data.map((point) => ({
-    date: new Date(point.capturedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    date: formatMonthDayUtc(point.capturedAt),
     value: Number(point.totalValueUsd.toFixed(2)),
   }));
 

@@ -1,8 +1,13 @@
 import { Bell, BellRing, ShieldCheck } from "lucide-react";
 import { prisma } from "@/lib/db";
+import { formatDateTimeUtc } from "@/lib/format";
 import { MetricTile, PageHeader, Panel, StatusPill } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
+
+const compactNumber = new Intl.NumberFormat("en-US", {
+  maximumFractionDigits: 0,
+});
 
 export default async function AlertsPage() {
   const [rules, events] = await Promise.all([
@@ -38,7 +43,7 @@ export default async function AlertsPage() {
                     <div className="mt-1 text-sm text-[#64706b] dark:text-[#9aa39e]">{rule.type}</div>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {rule.thresholdUsd ? <StatusPill tone="warn">${rule.thresholdUsd.toLocaleString()}</StatusPill> : null}
+                    {rule.thresholdUsd ? <StatusPill tone="warn">${compactNumber.format(rule.thresholdUsd)}</StatusPill> : null}
                     <StatusPill tone={rule.enabled ? "good" : "neutral"}>{rule.enabled ? "Enabled" : "Paused"}</StatusPill>
                   </div>
                 </div>
@@ -61,7 +66,7 @@ export default async function AlertsPage() {
                     </div>
                     <StatusPill tone={event.readAt ? "neutral" : "warn"}>{event.readAt ? "Read" : "Unread"}</StatusPill>
                   </div>
-                  <div className="mt-2 text-xs text-[#748079] dark:text-[#87938c]">{event.createdAt.toLocaleString()}</div>
+                  <div className="mt-2 text-xs text-[#748079] dark:text-[#87938c]">{formatDateTimeUtc(event.createdAt)}</div>
                 </div>
               ))
             )}

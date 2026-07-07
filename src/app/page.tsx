@@ -14,6 +14,7 @@ import { PortfolioLineChart, TokenBarChart } from "@/components/portfolio-chart"
 import { MarketHistoryTable } from "@/components/market-history-table";
 import { getDashboardData } from "@/lib/repositories";
 import { getPriorityMarketHistory } from "@/lib/market-history";
+import { formatDateUtc, formatTimeUtc } from "@/lib/format";
 import { MetricTile, StatusPill } from "@/components/ui";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
@@ -78,7 +79,7 @@ export default async function DashboardPage() {
             ["Wallets", String(data.trackedWallets), `${data.activeWallets} active`],
             ["Smart Labels", String(data.smartWallets), "User-owned tags"],
             ["Alerts", String(data.alerts.filter((alert) => !alert.readAt).length), "Unread events"],
-            ["Latest Sync", latestSync ? latestSync.toLocaleTimeString() : "None", latestSync ? latestSync.toLocaleDateString() : "No data"],
+            ["Latest Sync", formatTimeUtc(latestSync), latestSync ? formatDateUtc(latestSync) : "No data"],
           ].map(([label, value, detail]) => (
             <div key={label} className="border-b border-r border-[#d8e0ec] px-4 py-3 dark:border-[#1d2838] xl:border-b-0">
               <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#748096] dark:text-[#8795a8]">

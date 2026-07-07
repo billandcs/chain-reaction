@@ -3,6 +3,7 @@
 import { ArrowDownRight, ArrowUpRight, Database } from "lucide-react";
 import { Line, LineChart, ResponsiveContainer, Tooltip, YAxis } from "recharts";
 import { MarketHistoryRow } from "@/lib/market-history";
+import { formatMonthDayUtc, formatTimeUtc } from "@/lib/format";
 import { StatusPill } from "./ui";
 
 const usd = new Intl.NumberFormat("en-US", {
@@ -34,7 +35,7 @@ function ChangeCell({ value }: { value: number }) {
 function Sparkline({ row }: { row: MarketHistoryRow }) {
   const data = row.points.map((point) => ({
     price: point.price,
-    date: new Date(point.timestamp).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    date: formatMonthDayUtc(point.timestamp),
   }));
   const positive = row.change30d >= 0;
 
@@ -150,7 +151,7 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs text-[#626b7a] dark:text-[#98a4b3]">
               <Database size={13} />
-              {row.source} · updated {new Date(row.updatedAt).toLocaleTimeString()}
+              {row.source} · updated {formatTimeUtc(row.updatedAt)} UTC
             </div>
           </div>
         ))}

@@ -1,5 +1,6 @@
 import { Bot, FileText, Link2 } from "lucide-react";
 import { prisma } from "@/lib/db";
+import { formatDateTimeUtc } from "@/lib/format";
 import { MetricTile, PageHeader, Panel, StatusPill } from "@/components/ui";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +43,7 @@ export default async function AiReportsPage() {
                       {report.model ? <StatusPill>{report.model}</StatusPill> : null}
                     </div>
                   </div>
-                  <span className="text-xs text-[#748079] dark:text-[#87938c]">{report.createdAt.toLocaleString()}</span>
+                  <span className="text-xs text-[#748079] dark:text-[#87938c]">{formatDateTimeUtc(report.createdAt)}</span>
                 </div>
                 <p className="mt-3 text-sm leading-6 text-[#53605a] dark:text-[#a4ada7]">{report.content}</p>
               </article>

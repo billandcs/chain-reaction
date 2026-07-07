@@ -2,9 +2,11 @@ import { notFound } from "next/navigation";
 import { Activity, Clock3, Coins, DatabaseZap } from "lucide-react";
 import { DeleteWalletButton, SyncButton } from "@/components/sync-button";
 import { AddressText, MetricTile, PageHeader, Panel, StatusPill } from "@/components/ui";
+import { formatDateTimeUtc, formatDateUtc, formatTimeUtc } from "@/lib/format";
 import { getWallet } from "@/lib/repositories";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+const tokenAmount = new Intl.NumberFormat("en-US", { maximumFractionDigits: 6 });
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -68,8 +70,8 @@ export default async function WalletProfilePage({ params }: Props) {
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <MetricTile label="Transactions" value={String(wallet.transactions.length)} detail="Recent local rows" icon={Activity} tone="blue" />
         <MetricTile label="Top Token" value={topToken} detail={`${wallet.balances.length} balances`} icon={Coins} />
-        <MetricTile label="First Activity" value={firstActivity ? firstActivity.toLocaleDateString() : "None"} detail="Observed locally" icon={Clock3} tone="amber" />
-        <MetricTile label="Latest Activity" value={latestActivity ? latestActivity.toLocaleDateString() : "None"} detail={latestActivity ? latestActivity.toLocaleTimeString() : "No activity"} icon={DatabaseZap} tone="teal" />
+        <MetricTile label="First Activity" value={formatDateUtc(firstActivity)} detail="Observed locally" icon={Clock3} tone="amber" />
+        <MetricTile label="Latest Activity" value={formatDateUtc(latestActivity)} detail={latestActivity ? `${formatTimeUtc(latestActivity)} UTC` : "No activity"} icon={DatabaseZap} tone="teal" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
@@ -86,7 +88,7 @@ export default async function WalletProfilePage({ params }: Props) {
                   </div>
                   <div className="text-right">
                     <div className="font-medium">{money.format(balance.usdValue ?? 0)}</div>
-                    <div className="text-xs text-[#64706b] dark:text-[#9aa39e]">{balance.amount.toLocaleString()}</div>
+                    <div className="text-xs text-[#64706b] dark:text-[#9aa39e]">{tokenAmount.format(balance.amount)}</div>
                   </div>
                 </div>
               ))
@@ -103,7 +105,7 @@ export default async function WalletProfilePage({ params }: Props) {
                 <div key={transaction.id} className="grid grid-cols-[1fr_auto] gap-3 py-3">
                   <div className="min-w-0">
                     <div className="truncate font-mono text-xs text-[#3f4a45] dark:text-[#c1cac4]">{transaction.hash}</div>
-                    <div className="mt-1 text-sm text-[#64706b] dark:text-[#9aa39e]">{transaction.timestamp.toLocaleString()}</div>
+                    <div className="mt-1 text-sm text-[#64706b] dark:text-[#9aa39e]">{formatDateTimeUtc(transaction.timestamp)}</div>
                   </div>
                   <div className="text-right">
                     <div className="font-medium">{transaction.valueNative} ETH</div>
@@ -132,7 +134,7 @@ export default async function WalletProfilePage({ params }: Props) {
                   </div>
                   <div className="mt-1 text-sm text-[#64706b] dark:text-[#9aa39e]">{job.message ?? "No message"}</div>
                 </div>
-                <div className="shrink-0 text-sm text-[#64706b] dark:text-[#9aa39e]">{job.createdAt.toLocaleString()}</div>
+                <div className="shrink-0 text-sm text-[#64706b] dark:text-[#9aa39e]">{formatDateTimeUtc(job.createdAt)}</div>
               </div>
             ))
           )}
