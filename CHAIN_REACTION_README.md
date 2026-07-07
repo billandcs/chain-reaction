@@ -214,7 +214,7 @@ Current implementation status:
 - `[x]` CR-080 App Layout: sidebar, mobile navigation, dark UI, responsive layout, and primary pages are implemented.
 - `[~]` CR-081 Data Visualization: portfolio, holdings, sparklines, and market table charts exist; wallet timeline and Smart Money accumulation charts still need work.
 - `[x]` CR-082 Homepage Logo And Glass UX Polish: custom logo mark, translucent navigation shell, frosted dashboard panels, and mobile/desktop homepage polish are implemented.
-- `[x]` CR-083 Token Screener UX: volume-ranked homepage market table now uses a professional screener layout with real token logos, timeframe controls, segment filters, hover previews, pressure bars, and mobile cards.
+- `[x]` CR-083 Token Screener UX: volume-ranked homepage market table now uses a professional screener layout with real token logos, interactive timeframe controls, segment/signal filters, sortable columns, hover previews, pressure bars, and mobile cards.
 - `[~]` CR-090 Testing: `npm test` works with adapter unit coverage; DB/API/UI smoke tests still need expansion.
 - `[x]` CR-091 GitHub Actions: CI workflow exists for install, lint, typecheck, test, and build; status badge waits for remote repo creation.
 - `[~]` CR-092 Local Backup And Export: wallet-label CSV export/import is implemented; full SQLite backup/restore and alert JSON export still need work.

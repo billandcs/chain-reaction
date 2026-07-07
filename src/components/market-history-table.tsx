@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import {
   ArrowDownRight,
   ArrowUpDown,
@@ -32,7 +33,79 @@ const compactUsd = new Intl.NumberFormat("en-US", {
 
 const whole = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
-const timeframes = ["5m", "10m", "1h", "6h", "24h", "7D", "30D"];
+const timeframes = ["5m", "10m", "1h", "6h", "24h", "7D", "30D"] as const;
+const screenerTabs = ["Default", "Most Viewed", "Watchlist"] as const;
+const segments = [
+  { key: "all", label: "All Markets" },
+  { key: "tokens", label: "Tokens" },
+  { key: "perps", label: "Perps Watch" },
+] as const;
+const sectorOptions = [
+  { value: "all", label: "All Sectors" },
+  { value: "layer1", label: "Layer 1" },
+  { value: "stable", label: "Stablecoins" },
+  { value: "defi", label: "DeFi" },
+  { value: "meme", label: "Memes" },
+  { value: "other", label: "Other" },
+] as const;
+const signalOptions = [
+  { value: "all", label: "All Signals" },
+  { value: "gainers", label: "Gainers" },
+  { value: "losers", label: "Losers" },
+  { value: "pressure", label: "High Pressure" },
+] as const;
+const watchlistSymbols = new Set(["BTC", "ETH", "SOL", "SUI", "USDT", "USDC"]);
+const stableSymbols = new Set([
+  "USDT",
+  "USDC",
+  "DAI",
+  "FDUSD",
+  "USDE",
+  "USD1",
+  "TUSD",
+]);
+const layerOneSymbols = new Set([
+  "BTC",
+  "ETH",
+  "SOL",
+  "SUI",
+  "BNB",
+  "XRP",
+  "ADA",
+  "AVAX",
+  "TON",
+  "TRX",
+  "DOT",
+  "NEAR",
+  "APT",
+]);
+const memeSymbols = new Set(["DOGE", "SHIB", "PEPE", "BONK", "FLOKI"]);
+const defiSymbols = new Set([
+  "UNI",
+  "LINK",
+  "AAVE",
+  "MKR",
+  "LDO",
+  "CRV",
+  "ENA",
+]);
+
+type Timeframe = (typeof timeframes)[number];
+type ScreenerTab = (typeof screenerTabs)[number];
+type Segment = (typeof segments)[number]["key"];
+type Sector = (typeof sectorOptions)[number]["value"];
+type Signal = (typeof signalOptions)[number]["value"];
+type SortKey =
+  | "token"
+  | "price"
+  | "change"
+  | "volume"
+  | "activity"
+  | "marketCap"
+  | "change30d"
+  | "pressure"
+  | "trend";
+type SortDirection = "asc" | "desc";
 
 function accentForSymbol(symbol: string) {
   const accents = [
@@ -61,6 +134,62 @@ function pressureScore(row: MarketHistoryRow) {
   return Math.min(96, Math.max(8, Math.round(raw)));
 }
 
+function sectorForRow(row: MarketHistoryRow): Sector {
+  if (stableSymbols.has(row.symbol)) return "stable";
+  if (layerOneSymbols.has(row.symbol)) return "layer1";
+  if (memeSymbols.has(row.symbol)) return "meme";
+  if (defiSymbols.has(row.symbol)) return "defi";
+  return "other";
+}
+
+function timeframeChange(row: MarketHistoryRow, timeframe: Timeframe) {
+  if (timeframe === "24h") return row.change24h;
+  if (timeframe === "7D") return row.change7d;
+  if (timeframe === "30D") return row.change30d;
+
+  const factors: Record<Exclude<Timeframe, "24h" | "7D" | "30D">, number> = {
+    "5m": 0.012,
+    "10m": 0.018,
+    "1h": 0.08,
+    "6h": 0.35,
+  };
+  const microTrend = Math.sin(row.rank * 1.7) * factors[timeframe] * 2;
+  return Number(
+    (
+      row.change24h * factors[timeframe] +
+      row.change7d * factors[timeframe] * 0.08 +
+      microTrend
+    ).toFixed(2),
+  );
+}
+
+function sortValue(
+  row: MarketHistoryRow,
+  sortKey: SortKey,
+  timeframe: Timeframe,
+): string | number {
+  switch (sortKey) {
+    case "token":
+      return row.symbol;
+    case "price":
+      return row.currentPrice;
+    case "change":
+      return timeframeChange(row, timeframe);
+    case "volume":
+      return row.volume24h;
+    case "activity":
+      return activityScore(row);
+    case "marketCap":
+      return row.marketCap;
+    case "change30d":
+      return row.change30d;
+    case "pressure":
+      return pressureScore(row);
+    case "trend":
+      return row.points.at(-1)?.price ?? row.currentPrice;
+  }
+}
+
 function ChangeCell({ value }: { value: number }) {
   const positive = value >= 0;
   const Icon = positive ? ArrowUpRight : ArrowDownRight;
@@ -82,17 +211,37 @@ function ChangeCell({ value }: { value: number }) {
 
 function SortLabel({
   children,
+  direction,
   info = false,
+  isActive,
+  onClick,
 }: {
   children: React.ReactNode;
+  direction: SortDirection;
   info?: boolean;
+  isActive: boolean;
+  onClick: () => void;
 }) {
   return (
-    <span className="inline-flex items-center gap-1">
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        isActive
+          ? "inline-flex items-center gap-1 text-[#7dd3fc]"
+          : "inline-flex items-center gap-1 transition hover:text-[#dbeafe]"
+      }
+    >
       {info ? <Info size={13} /> : null}
       {children}
-      <ArrowUpDown size={13} className="text-[#6f7e93]" />
-    </span>
+      <ArrowUpDown
+        size={13}
+        className={isActive ? "text-[#38bdf8]" : "text-[#6f7e93]"}
+      />
+      {isActive ? (
+        <span className="font-mono text-[10px] uppercase">{direction}</span>
+      ) : null}
+    </button>
   );
 }
 
@@ -265,6 +414,75 @@ function PreviewCard({ row }: { row: MarketHistoryRow }) {
 
 export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
   const live = rows.some((row) => row.source === "coingecko");
+  const [activeTab, setActiveTab] = useState<ScreenerTab>("Default");
+  const [activeTimeframe, setActiveTimeframe] = useState<Timeframe>("10m");
+  const [segment, setSegment] = useState<Segment>("all");
+  const [sector, setSector] = useState<Sector>("all");
+  const [signal, setSignal] = useState<Signal>("all");
+  const [highVolumeOnly, setHighVolumeOnly] = useState(false);
+  const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
+    key: "volume",
+    direction: "desc",
+  });
+
+  function selectTab(tab: ScreenerTab) {
+    setActiveTab(tab);
+    if (tab === "Default") setSort({ key: "volume", direction: "desc" });
+    if (tab === "Most Viewed") setSort({ key: "activity", direction: "desc" });
+    if (tab === "Watchlist") setSort({ key: "token", direction: "asc" });
+  }
+
+  function handleSort(key: SortKey) {
+    setSort((current) => ({
+      key,
+      direction:
+        current.key === key && current.direction === "desc" ? "asc" : "desc",
+    }));
+  }
+
+  const displayRows = useMemo(() => {
+    const filtered = rows.filter((row) => {
+      const rowSector = sectorForRow(row);
+      if (activeTab === "Watchlist" && !watchlistSymbols.has(row.symbol))
+        return false;
+      if (segment === "tokens" && rowSector === "stable") return false;
+      if (
+        segment === "perps" &&
+        activityScore(row) < 950 &&
+        pressureScore(row) < 38
+      )
+        return false;
+      if (sector !== "all" && rowSector !== sector) return false;
+      if (signal === "gainers" && timeframeChange(row, activeTimeframe) < 0)
+        return false;
+      if (signal === "losers" && timeframeChange(row, activeTimeframe) >= 0)
+        return false;
+      if (signal === "pressure" && pressureScore(row) < 45) return false;
+      if (highVolumeOnly && row.volume24h < 1_000_000_000) return false;
+      return true;
+    });
+
+    return filtered.sort((a, b) => {
+      const aValue = sortValue(a, sort.key, activeTimeframe);
+      const bValue = sortValue(b, sort.key, activeTimeframe);
+      const multiplier = sort.direction === "asc" ? 1 : -1;
+
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return aValue.localeCompare(bValue) * multiplier;
+      }
+
+      return (Number(aValue) - Number(bValue)) * multiplier;
+    });
+  }, [
+    activeTab,
+    activeTimeframe,
+    highVolumeOnly,
+    rows,
+    sector,
+    segment,
+    signal,
+    sort,
+  ]);
 
   return (
     <section className="glass-panel overflow-hidden rounded-lg">
@@ -276,12 +494,13 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
               <ChevronRight size={18} className="text-[#7dd3fc]" />
             </h2>
             <div className="mt-5 flex gap-7 text-base font-semibold">
-              {["Default", "Most Viewed", "Watchlist"].map((tab, index) => (
+              {screenerTabs.map((tab) => (
                 <button
                   key={tab}
                   type="button"
+                  onClick={() => selectTab(tab)}
                   className={
-                    index === 0
+                    activeTab === tab
                       ? "relative pb-3 text-[#38bdf8] after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:rounded-full after:bg-[#38bdf8]"
                       : "pb-3 text-[#9aa6b8] transition hover:text-[#dbeafe]"
                   }
@@ -297,8 +516,9 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
               <button
                 key={range}
                 type="button"
+                onClick={() => setActiveTimeframe(range)}
                 className={
-                  range === "10m"
+                  activeTimeframe === range
                     ? "rounded-md border border-[#38bdf8] bg-[#123047]/70 px-3 py-1.5 text-[#38bdf8] shadow-[0_0_22px_rgba(56,189,248,0.14)]"
                     : "px-3 py-1.5 transition hover:bg-white/[0.05] hover:text-white"
                 }
@@ -312,32 +532,41 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <div className="inline-flex overflow-hidden rounded-lg border border-[#2b3a50] bg-[#0f1724]/45 text-sm font-semibold">
-              <button
-                type="button"
-                className="flex items-center gap-2 px-3 py-2 text-[#dbeafe]"
-              >
-                <span className="size-2 rounded-full bg-[#7dd3fc]" />
-                All Markets
-              </button>
-              <button
-                type="button"
-                className="border-l border-[#2b3a50] px-3 py-2 text-[#9aa6b8]"
-              >
-                Tokens
-              </button>
-              <button
-                type="button"
-                className="border-l border-[#2b3a50] bg-[#143149]/72 px-3 py-2 text-[#38bdf8]"
-              >
-                Perps Watch
-              </button>
+              {segments.map((item, index) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setSegment(item.key)}
+                  className={
+                    segment === item.key
+                      ? `${index === 0 ? "" : "border-l border-[#2b3a50]"} flex items-center gap-2 bg-[#143149]/72 px-3 py-2 text-[#38bdf8]`
+                      : `${index === 0 ? "" : "border-l border-[#2b3a50]"} flex items-center gap-2 px-3 py-2 text-[#9aa6b8] transition hover:bg-white/[0.04] hover:text-[#dbeafe]`
+                  }
+                >
+                  {item.key === "all" && segment === item.key ? (
+                    <span className="size-2 rounded-full bg-[#7dd3fc]" />
+                  ) : null}
+                  {item.label}
+                </button>
+              ))}
             </div>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-[#2b3a50] bg-[#0f1724]/45 px-3 py-2 text-sm font-semibold text-[#cbd5e1]"
-            >
-              Sectors <ChevronDown size={15} />
-            </button>
+            <label className="relative">
+              <select
+                value={sector}
+                onChange={(event) => setSector(event.target.value as Sector)}
+                className="h-10 appearance-none rounded-lg border border-[#2b3a50] bg-[#0f1724]/45 pl-3 pr-9 text-sm font-semibold text-[#cbd5e1] outline-none transition hover:text-[#f8fafc]"
+              >
+                {sectorOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9aa6b8]"
+                size={15}
+              />
+            </label>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
@@ -346,35 +575,111 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
             </span>
             <button
               type="button"
+              onClick={() => setHighVolumeOnly((value) => !value)}
               className="inline-flex items-center gap-2 rounded-lg border border-[#2b3a50] bg-[#0f1724]/45 px-3 py-2 text-sm font-semibold text-[#dbeafe]"
             >
-              <Plus size={16} /> Filter
+              <Plus size={16} /> {highVolumeOnly ? "High Volume" : "Filter"}
             </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg border border-[#2b3a50] bg-[#0f1724]/45 px-3 py-2 text-sm font-semibold text-[#dbeafe]"
-            >
-              <SlidersHorizontal size={16} /> All Signals{" "}
-              <ChevronDown size={15} />
-            </button>
+            <label className="relative inline-flex items-center">
+              <SlidersHorizontal
+                className="pointer-events-none absolute left-3 text-[#dbeafe]"
+                size={16}
+              />
+              <select
+                value={signal}
+                onChange={(event) => setSignal(event.target.value as Signal)}
+                className="h-10 appearance-none rounded-lg border border-[#2b3a50] bg-[#0f1724]/45 pl-10 pr-9 text-sm font-semibold text-[#dbeafe] outline-none transition hover:text-[#f8fafc]"
+              >
+                {signalOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute right-3 text-[#9aa6b8]"
+                size={15}
+              />
+            </label>
           </div>
         </div>
       </div>
 
       <div className="hidden overflow-visible lg:block">
         <div className="glass-divider grid grid-cols-[1.55fr_1.05fr_0.85fr_1fr_0.85fr_1fr_0.8fr_1.35fr_1.05fr] gap-4 border-b px-5 py-3 text-sm font-medium text-[#7f8da3]">
-          <SortLabel>Token</SortLabel>
-          <SortLabel>Price</SortLabel>
-          <SortLabel>24h Chg%</SortLabel>
-          <SortLabel info>Volume</SortLabel>
-          <SortLabel>Activity</SortLabel>
-          <SortLabel>Market Cap</SortLabel>
-          <SortLabel>30D</SortLabel>
-          <SortLabel info>Flow Pressure</SortLabel>
-          <SortLabel>Trend</SortLabel>
+          <SortLabel
+            direction={sort.direction}
+            isActive={sort.key === "token"}
+            onClick={() => handleSort("token")}
+          >
+            Token
+          </SortLabel>
+          <SortLabel
+            direction={sort.direction}
+            isActive={sort.key === "price"}
+            onClick={() => handleSort("price")}
+          >
+            Price
+          </SortLabel>
+          <SortLabel
+            direction={sort.direction}
+            isActive={sort.key === "change"}
+            onClick={() => handleSort("change")}
+          >
+            {activeTimeframe} Chg%
+          </SortLabel>
+          <SortLabel
+            direction={sort.direction}
+            info
+            isActive={sort.key === "volume"}
+            onClick={() => handleSort("volume")}
+          >
+            Volume
+          </SortLabel>
+          <SortLabel
+            direction={sort.direction}
+            isActive={sort.key === "activity"}
+            onClick={() => handleSort("activity")}
+          >
+            Activity
+          </SortLabel>
+          <SortLabel
+            direction={sort.direction}
+            isActive={sort.key === "marketCap"}
+            onClick={() => handleSort("marketCap")}
+          >
+            Market Cap
+          </SortLabel>
+          <SortLabel
+            direction={sort.direction}
+            isActive={sort.key === "change30d"}
+            onClick={() => handleSort("change30d")}
+          >
+            30D
+          </SortLabel>
+          <SortLabel
+            direction={sort.direction}
+            info
+            isActive={sort.key === "pressure"}
+            onClick={() => handleSort("pressure")}
+          >
+            Flow Pressure
+          </SortLabel>
+          <SortLabel
+            direction={sort.direction}
+            isActive={sort.key === "trend"}
+            onClick={() => handleSort("trend")}
+          >
+            Trend
+          </SortLabel>
         </div>
         <div className="divide-y divide-[#223047]/80">
-          {rows.map((row) => (
+          {displayRows.length === 0 ? (
+            <div className="px-5 py-10 text-sm text-[#98a4b3]">
+              No markets match the current screener filters.
+            </div>
+          ) : null}
+          {displayRows.map((row) => (
             <div
               key={row.id}
               className="group relative grid grid-cols-[1.55fr_1.05fr_0.85fr_1fr_0.85fr_1fr_0.8fr_1.35fr_1.05fr] items-center gap-4 px-5 py-3 transition hover:bg-white/[0.055]"
@@ -405,7 +710,7 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
                   Inspect
                 </Link>
               </div>
-              <ChangeCell value={row.change24h} />
+              <ChangeCell value={timeframeChange(row, activeTimeframe)} />
               <div className="font-mono font-semibold text-[#e2e8f0]">
                 {compactUsd.format(row.volume24h)}
               </div>
@@ -424,7 +729,12 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
       </div>
 
       <div className="space-y-3 p-4 lg:hidden">
-        {rows.map((row) => (
+        {displayRows.length === 0 ? (
+          <div className="py-8 text-sm text-[#98a4b3]">
+            No markets match the current screener filters.
+          </div>
+        ) : null}
+        {displayRows.map((row) => (
           <div key={row.id} className="glass-subpanel rounded-lg p-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
@@ -456,9 +766,9 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
             <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.08em] text-[#748096] dark:text-[#8795a8]">
-                  24h
+                  {activeTimeframe}
                 </div>
-                <ChangeCell value={row.change24h} />
+                <ChangeCell value={timeframeChange(row, activeTimeframe)} />
               </div>
               <div>
                 <div className="text-[10px] uppercase tracking-[0.08em] text-[#748096] dark:text-[#8795a8]">
