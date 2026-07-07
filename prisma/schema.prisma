@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Wallet {
+  id              String              @id @default(cuid())
+  address         String
+  chain           String              @default("ethereum")
+  name            String
+  trackingEnabled Boolean             @default(true)
+  notes           String?
+  manualScore     Int                 @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  labels          WalletLabel[]
+  balances        TokenBalance[]
+  transactions    Transaction[]
+  outgoing        Transfer[]          @relation("TransferFromWallet")
+  incoming        Transfer[]          @relation("TransferToWallet")
+  portfolio       PortfolioSnapshot[]
+  syncJobs        SyncJob[]
+
+  @@unique([chain, address])
+  @@index([chain])
+}
+
+model WalletLabel {
+  id          String   @id @default(cuid())
+  walletId    String?
+  address     String?
+  chain       String   @default("ethereum")
+  type        String
+  name        String
+  confidence  Int      @default(70)
+  notes       String?
+  sourceUrl   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  wallet      Wallet?  @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId])
+  @@index([chain, address])
+  @@index([type])
+}
+
+model Token {
+  id             String          @id @default(cuid())
+  chain          String          @default("ethereum")
+  address        String
+  symbol         String
+  name           String
+  decimals       Int             @default(18)
+  logoUrl        String?
+  coingeckoId    String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  balances       TokenBalance[]
+  transfers      Transfer[]
+  prices         PriceSnapshot[]
+
+  @@unique([chain, address])
+  @@index([symbol])
+}
+
+model TokenBalance {
+  id          String   @id @default(cuid())
+  walletId    String
+  tokenId     String
+  amount      Float
+  usdValue    Float?
+  blockNumber Int?
+  syncedAt    DateTime @default(now())
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  token       Token    @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@unique([walletId, tokenId])
+  @@index([tokenId])
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  walletId    String
+  chain       String   @default("ethereum")
+  hash        String
+  fromAddress String
+  toAddress   String?
+  valueNative Float    @default(0)
+  gasFeeNative Float?
+  blockNumber Int?
+  timestamp   DateTime
+  status      String   @default("success")
+  wallet      Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@unique([chain, hash, walletId])
+  @@index([walletId, timestamp])
+}
+
+model Transfer {
+  id              String   @id @default(cuid())
+  chain           String   @default("ethereum")
+  hash            String
+  tokenId         String
+  fromAddress     String
+  toAddress       String
+  fromWalletId    String?
+  toWalletId      String?
+  amount          Float
+  usdValue        Float?
+  timestamp       DateTime
+  token           Token    @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  fromWallet      Wallet?  @relation("TransferFromWallet", fields: [fromWalletId], references: [id], onDelete: SetNull)
+  toWallet        Wallet?  @relation("TransferToWallet", fields: [toWalletId], references: [id], onDelete: SetNull)
+
+  @@unique([chain, hash, tokenId, fromAddress, toAddress])
+  @@index([timestamp])
+  @@index([fromWalletId])
+  @@index([toWalletId])
+}
+
+model PriceSnapshot {
+  id            String   @id @default(cuid())
+  tokenId       String
+  priceUsd      Float
+  change24h     Float?
+  liquidityUsd  Float?
+  volume24hUsd  Float?
+  marketCapUsd  Float?
+  source        String
+  capturedAt    DateTime @default(now())
+  token         Token    @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@index([tokenId, capturedAt])
+}
+
+model PortfolioSnapshot {
+  id              String   @id @default(cuid())
+  walletId        String?
+  totalValueUsd   Float
+  chainBreakdown  String
+  tokenBreakdown  String
+  capturedAt      DateTime @default(now())
+  wallet          Wallet?  @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, capturedAt])
+}
+
+model AlertRule {
+  id          String       @id @default(cuid())
+  name        String
+  type        String
+  thresholdUsd Float?
+  tokenAddress String?
+  walletId    String?
+  enabled     Boolean      @default(true)
+  configJson  String       @default("{}")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  events      AlertEvent[]
+}
+
+model AlertEvent {
+  id          String    @id @default(cuid())
+  ruleId      String
+  title       String
+  message     String
+  severity    String    @default("info")
+  readAt      DateTime?
+  dataJson    String    @default("{}")
+  createdAt   DateTime  @default(now())
+  rule        AlertRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId, createdAt])
+}
+
+model AiReport {
+  id            String   @id @default(cuid())
+  subjectType   String
+  subjectId     String?
+  title         String
+  prompt        String
+  content       String
+  citationsJson String   @default("[]")
+  model         String?
+  createdAt     DateTime @default(now())
+
+  @@index([subjectType, subjectId])
+}
+
+model SyncJob {
+  id          String    @id @default(cuid())
+  walletId    String?
+  chain       String    @default("ethereum")
+  adapter     String
+  status      String    @default("queued")
+  message     String?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  wallet      Wallet?   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@index([walletId, createdAt])
+  @@index([status])
+}
