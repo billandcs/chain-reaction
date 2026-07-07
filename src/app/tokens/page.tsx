@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowDownLeft, Coins, WalletCards } from "lucide-react";
+import { TokenForm } from "@/components/token-form";
 import { listTokens } from "@/lib/repositories";
 import {
   AddressText,
@@ -63,6 +64,10 @@ export default async function TokensPage() {
         />
       </div>
 
+      <Panel title="Add Token" eyebrow="Create from address">
+        <TokenForm />
+      </Panel>
+
       <Panel
         title="Token Exposure"
         eyebrow={`${tokens.length} assets`}
@@ -75,13 +80,13 @@ export default async function TokensPage() {
         ) : (
           <>
             <div className="hidden md:block">
-              <div className="grid grid-cols-[1.4fr_0.75fr_0.65fr_0.75fr] gap-4 border-b border-[#e2e6e1] pb-3 text-[11px] font-medium uppercase tracking-[0.08em] text-[#748079] dark:border-[#25302b] dark:text-[#87938c]">
+              <div className="glass-divider grid grid-cols-[1.4fr_0.75fr_0.65fr_0.75fr] gap-4 border-b pb-3 text-[11px] font-medium uppercase tracking-[0.08em] text-[#748096] dark:text-[#8795a8]">
                 <div>Token</div>
                 <div>Exposure</div>
                 <div>Wallets</div>
                 <div>Latest Price</div>
               </div>
-              <div className="divide-y divide-[#e2e6e1] dark:divide-[#25302b]">
+              <div className="divide-y divide-[#d8e0ec]/70 dark:divide-[#223047]/80">
                 {tokens.map((token) => {
                   const exposure = token.balances.reduce(
                     (sum, balance) => sum + (balance.usdValue ?? 0),
@@ -170,7 +175,7 @@ export default async function TokensPage() {
               .map(({ token, transfer }) => (
                 <div
                   key={transfer.id}
-                  className="rounded-lg border border-[#dce1db] bg-white p-3 dark:border-[#27312d] dark:bg-[#111614]"
+                  className="glass-subpanel rounded-lg p-3"
                 >
                   <div className="flex justify-between gap-3">
                     <span className="font-medium">{token.symbol}</span>

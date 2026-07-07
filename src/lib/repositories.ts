@@ -1,5 +1,6 @@
 import { prisma } from "./db";
-import { WalletInput } from "./validators";
+import { getChainAdapter } from "./adapters/registry";
+import { TokenInput, WalletInput } from "./validators";
 
 export async function listWallets() {
   return prisma.wallet.findMany({
@@ -102,6 +103,96 @@ export async function listTokens() {
     },
     orderBy: { updatedAt: "desc" },
   });
+}
+
+async function captureTokenMarketSnapshot(
+  tokenId: string,
+  coingeckoId?: string | null,
+) {
+  if (!coingeckoId) return;
+
+  const params = new URLSearchParams({
+    ids: coingeckoId,
+    vs_currencies: "usd",
+    include_market_cap: "true",
+    include_24hr_vol: "true",
+    include_24hr_change: "true",
+  });
+
+  try {
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?${params}`,
+      {
+        headers: { accept: "application/json" },
+        next: { revalidate: 300 },
+        signal: AbortSignal.timeout(7000),
+      },
+    );
+
+    if (!response.ok) return;
+
+    const data = (await response.json()) as Record<
+      string,
+      {
+        usd?: number;
+        usd_market_cap?: number;
+        usd_24h_vol?: number;
+        usd_24h_change?: number;
+      }
+    >;
+    const market = data[coingeckoId];
+
+    if (!market?.usd) return;
+
+    await prisma.priceSnapshot.create({
+      data: {
+        tokenId,
+        priceUsd: market.usd,
+        change24h: market.usd_24h_change,
+        volume24hUsd: market.usd_24h_vol,
+        marketCapUsd: market.usd_market_cap,
+        source: "coingecko",
+      },
+    });
+  } catch {
+    // Token creation should still succeed when market data is unavailable.
+  }
+}
+
+export async function createToken(input: TokenInput) {
+  const adapter = getChainAdapter();
+  const normalizedAddress = input.address.toLowerCase();
+  const cleanedCoingeckoId = input.coingeckoId?.trim() || undefined;
+  const cleanedLogoUrl = input.logoUrl?.trim() || undefined;
+  const metadata = await adapter.getTokenMetadata(normalizedAddress);
+  const token = await prisma.token.upsert({
+    where: {
+      chain_address: {
+        chain: input.chain,
+        address: normalizedAddress,
+      },
+    },
+    create: {
+      chain: input.chain,
+      address: normalizedAddress,
+      symbol: input.symbol?.trim() || metadata.symbol,
+      name: input.name?.trim() || metadata.name,
+      decimals: input.decimals ?? metadata.decimals,
+      coingeckoId: cleanedCoingeckoId ?? metadata.coingeckoId,
+      logoUrl: cleanedLogoUrl,
+    },
+    update: {
+      symbol: input.symbol?.trim() || metadata.symbol,
+      name: input.name?.trim() || metadata.name,
+      decimals: input.decimals ?? metadata.decimals,
+      coingeckoId: cleanedCoingeckoId ?? metadata.coingeckoId,
+      logoUrl: cleanedLogoUrl,
+      updatedAt: new Date(),
+    },
+  });
+
+  await captureTokenMarketSnapshot(token.id, token.coingeckoId);
+  return token;
 }
 
 export async function getToken(id: string) {
