@@ -201,7 +201,7 @@ Current implementation status:
 - `[~]` CR-022 Price Data Adapter: CoinGecko top-volume market table and fallback data exist; token detail price pages and DexScreener/GeckoTerminal fallback still need implementation.
 - `[x]` CR-030 Portfolio Dashboard: local portfolio metrics, top holdings, inflows/outflows, market table, watchlist summary, charts, and empty states are implemented.
 - `[~]` CR-031 Wallet Flow Explorer: wallet profile shows recent transactions and synced transfers foundation; full counterparty explorer, filters, and sorting still need work.
-- `[~]` CR-032 Token Flow Page: tokens page shows exposure and latest flows; full token detail page with side-by-side price/flow analysis still needs work.
+- `[~]` CR-032 Token Flow Page: tokens page, local token detail, market token detail, side-by-side price/flow analysis, holders, and transfer rows exist; create-from-address flow still needs work.
 - `[x]` CR-040 Local Wallet Label Database: manual label creation, label type, confidence, notes, source URL, CSV import, CSV export, bulk upload, and label display are implemented.
 - `[~]` CR-041 Smart Wallet Scoring: simple transparent local score is visible; scoring job and sortable score column still need work.
 - `[~]` CR-042 Smart Money Dashboard: score and label dashboard exists; top buys/sells, accumulations, and time filters still need work.

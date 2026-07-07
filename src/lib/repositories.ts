@@ -10,7 +10,9 @@ export async function listWallets() {
         include: { token: true },
         orderBy: { usdValue: "desc" },
       },
-      _count: { select: { transactions: true, incoming: true, outgoing: true } },
+      _count: {
+        select: { transactions: true, incoming: true, outgoing: true },
+      },
     },
   });
 }
@@ -34,8 +36,16 @@ export async function getWallet(id: string) {
         orderBy: { usdValue: "desc" },
       },
       transactions: { orderBy: { timestamp: "desc" }, take: 20 },
-      incoming: { include: { token: true }, orderBy: { timestamp: "desc" }, take: 20 },
-      outgoing: { include: { token: true }, orderBy: { timestamp: "desc" }, take: 20 },
+      incoming: {
+        include: { token: true },
+        orderBy: { timestamp: "desc" },
+        take: 20,
+      },
+      outgoing: {
+        include: { token: true },
+        orderBy: { timestamp: "desc" },
+        take: 20,
+      },
       syncJobs: { orderBy: { createdAt: "desc" }, take: 8 },
     },
   });
@@ -94,6 +104,34 @@ export async function listTokens() {
   });
 }
 
+export async function getToken(id: string) {
+  return prisma.token.findUnique({
+    where: { id },
+    include: {
+      balances: {
+        include: {
+          wallet: {
+            include: { labels: true },
+          },
+        },
+        orderBy: { usdValue: "desc" },
+      },
+      transfers: {
+        include: {
+          fromWallet: { include: { labels: true } },
+          toWallet: { include: { labels: true } },
+        },
+        orderBy: { timestamp: "desc" },
+        take: 40,
+      },
+      prices: {
+        orderBy: { capturedAt: "asc" },
+        take: 90,
+      },
+    },
+  });
+}
+
 export async function listLabels() {
   return prisma.walletLabel.findMany({
     include: { wallet: true },
@@ -120,7 +158,10 @@ export async function getDashboardData() {
     }),
   ]);
 
-  const tokenTotals = new Map<string, { symbol: string; name: string; usdValue: number; amount: number }>();
+  const tokenTotals = new Map<
+    string,
+    { symbol: string; name: string; usdValue: number; amount: number }
+  >();
   let totalValue = 0;
 
   for (const wallet of wallets) {
@@ -139,9 +180,15 @@ export async function getDashboardData() {
     }
   }
 
-  const topTokens = Array.from(tokenTotals.values()).sort((a, b) => b.usdValue - a.usdValue).slice(0, 6);
-  const activeWallets = wallets.filter((wallet) => wallet.trackingEnabled).length;
-  const smartWallets = wallets.filter((wallet) => wallet.labels.some((label) => label.type === "Smart Money")).length;
+  const topTokens = Array.from(tokenTotals.values())
+    .sort((a, b) => b.usdValue - a.usdValue)
+    .slice(0, 6);
+  const activeWallets = wallets.filter(
+    (wallet) => wallet.trackingEnabled,
+  ).length;
+  const smartWallets = wallets.filter((wallet) =>
+    wallet.labels.some((label) => label.type === "Smart Money"),
+  ).length;
 
   return {
     totalValue,

@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   ArrowDownRight,
   ArrowUpDown,
@@ -397,9 +398,12 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
               </div>
               <div className="flex items-center gap-2 font-mono font-semibold text-[#f8fafc]">
                 {usd.format(row.currentPrice)}
-                <span className="rounded-md border border-[#2b3a50] bg-white/[0.05] px-2 py-1 font-sans text-xs font-semibold text-[#38bdf8]">
+                <Link
+                  href={`/tokens/market/${row.id}`}
+                  className="rounded-md border border-[#2b3a50] bg-white/[0.05] px-2 py-1 font-sans text-xs font-semibold text-[#38bdf8] transition hover:border-[#38bdf8]/60 hover:bg-[#123047]/70"
+                >
                   Inspect
-                </span>
+                </Link>
               </div>
               <ChangeCell value={row.change24h} />
               <div className="font-mono font-semibold text-[#e2e8f0]">
