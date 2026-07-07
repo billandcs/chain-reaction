@@ -214,6 +214,7 @@ Current implementation status:
 - `[x]` CR-080 App Layout: sidebar, mobile navigation, dark UI, responsive layout, and primary pages are implemented.
 - `[~]` CR-081 Data Visualization: portfolio, holdings, sparklines, and market table charts exist; wallet timeline and Smart Money accumulation charts still need work.
 - `[x]` CR-082 Homepage Logo And Glass UX Polish: custom logo mark, translucent navigation shell, frosted dashboard panels, and mobile/desktop homepage polish are implemented.
+- `[x]` CR-083 Token Screener UX: volume-ranked homepage market table now uses a professional screener layout with timeframe controls, segment filters, hover previews, pressure bars, and mobile cards.
 - `[~]` CR-090 Testing: `npm test` works with adapter unit coverage; DB/API/UI smoke tests still need expansion.
 - `[x]` CR-091 GitHub Actions: CI workflow exists for install, lint, typecheck, test, and build; status badge waits for remote repo creation.
 - `[~]` CR-092 Local Backup And Export: wallet-label CSV export/import is implemented; full SQLite backup/restore and alert JSON export still need work.
@@ -801,6 +802,29 @@ Acceptance criteria:
 - Logo is recognizable at desktop and mobile sizes.
 - Text remains readable on translucent surfaces.
 - Mobile layout does not introduce horizontal overflow.
+
+### CR-083: Token Screener UX
+
+Goal:
+
+Upgrade the homepage market table into a dense, professional token screener inspired by trading-desk interfaces while keeping the MVP research-only.
+
+Deliverables:
+
+- Timeframe control strip.
+- Default, Most Viewed, and Watchlist tabs.
+- Market segment and signal filter controls.
+- Volume-ranked desktop screener rows.
+- Token hover preview card.
+- Buy/sell pressure visualization.
+- Responsive mobile token cards.
+
+Acceptance criteria:
+
+- Top 20 volume rows remain visible and scan-friendly on desktop.
+- Mobile cards avoid horizontal scrolling.
+- Trading execution is not implied or enabled.
+- Live/fallback data source remains visible.
 
 ## Milestone 9: DevOps And Quality
 
