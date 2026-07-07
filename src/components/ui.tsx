@@ -18,7 +18,9 @@ export function PageHeader({
           {title}
         </h1>
         {description ? (
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#626b7a] dark:text-[#98a4b3]">{description}</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-[#626b7a] dark:text-[#98a4b3]">
+            {description}
+          </p>
         ) : null}
       </div>
       {action ? <div className="self-start sm:self-auto">{action}</div> : null}
@@ -40,21 +42,20 @@ export function Panel({
   className?: string;
 }) {
   return (
-    <section
-      className={clsx(
-        "rounded-lg border border-[#d9deea] bg-[#fbfcff] shadow-[0_1px_2px_rgba(15,23,42,0.05)] dark:border-[#253246] dark:bg-[#111722]",
-        className,
-      )}
-    >
+    <section className={clsx("glass-panel rounded-lg", className)}>
       {title || action || eyebrow ? (
-        <div className="flex items-start justify-between gap-4 border-b border-[#e2e7f0] px-4 py-3 dark:border-[#223047] sm:px-5">
+        <div className="glass-divider flex items-start justify-between gap-4 border-b px-4 py-3 sm:px-5">
           <div>
             {eyebrow ? (
               <div className="mb-1 text-[11px] font-medium uppercase tracking-[0.08em] text-[#778195] dark:text-[#7f8da3]">
                 {eyebrow}
               </div>
             ) : null}
-            {title ? <h2 className="text-base font-semibold text-[#151a24] dark:text-[#eef4fb]">{title}</h2> : null}
+            {title ? (
+              <h2 className="text-base font-semibold text-[#151a24] dark:text-[#eef4fb]">
+                {title}
+              </h2>
+            ) : null}
           </div>
           {action}
         </div>
@@ -85,16 +86,27 @@ export function MetricTile({
   };
 
   return (
-    <div className="rounded-lg border border-[#dde4ef] bg-[#fbfcff] p-4 dark:border-[#253246] dark:bg-[#111722]">
+    <div className="glass-subpanel rounded-lg p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-xs font-medium uppercase tracking-[0.08em] text-[#748096] dark:text-[#8795a8]">
             {label}
           </div>
-          <div className="mt-2 text-2xl font-semibold leading-none text-[#10131a] dark:text-[#f3f7fb]">{value}</div>
-          {detail ? <div className="mt-2 text-xs text-[#626b7a] dark:text-[#98a4b3]">{detail}</div> : null}
+          <div className="mt-2 text-2xl font-semibold leading-none text-[#10131a] dark:text-[#f3f7fb]">
+            {value}
+          </div>
+          {detail ? (
+            <div className="mt-2 text-xs text-[#626b7a] dark:text-[#98a4b3]">
+              {detail}
+            </div>
+          ) : null}
         </div>
-        <div className={clsx("flex size-9 shrink-0 items-center justify-center rounded-lg", tones[tone])}>
+        <div
+          className={clsx(
+            "flex size-9 shrink-0 items-center justify-center rounded-lg",
+            tones[tone],
+          )}
+        >
           <Icon size={18} />
         </div>
       </div>
@@ -110,15 +122,21 @@ export function StatusPill({
   tone?: "neutral" | "good" | "warn" | "risk" | "info";
 }) {
   const tones = {
-    neutral: "border-[#d9deea] bg-[#f4f6fb] text-[#535c6c] dark:border-[#2a3548] dark:bg-[#171d28] dark:text-[#a4afbf]",
-    good: "border-[#b8e6ff] bg-[#e7f7ff] text-[#075985] dark:border-[#22506b] dark:bg-[#10283a] dark:text-[#7dd3fc]",
-    warn: "border-[#efd99e] bg-[#fff7df] text-[#8d650d] dark:border-[#594518] dark:bg-[#302712] dark:text-[#f2d47b]",
-    risk: "border-[#f1bdc6] bg-[#fff0f2] text-[#aa2344] dark:border-[#5a2230] dark:bg-[#351820] dark:text-[#ff9bad]",
-    info: "border-[#cfd6ff] bg-[#f0f3ff] text-[#3730a3] dark:border-[#303b77] dark:bg-[#1d2447] dark:text-[#aebfff]",
+    neutral:
+      "border-[#d9deea]/80 bg-white/45 text-[#535c6c] backdrop-blur dark:border-[#2a3548] dark:bg-white/[0.05] dark:text-[#a4afbf]",
+    good: "border-[#b8e6ff]/80 bg-[#e7f7ff]/65 text-[#075985] backdrop-blur dark:border-[#22506b] dark:bg-[#10283a]/72 dark:text-[#7dd3fc]",
+    warn: "border-[#efd99e]/80 bg-[#fff7df]/68 text-[#8d650d] backdrop-blur dark:border-[#594518] dark:bg-[#302712]/72 dark:text-[#f2d47b]",
+    risk: "border-[#f1bdc6]/80 bg-[#fff0f2]/66 text-[#aa2344] backdrop-blur dark:border-[#5a2230] dark:bg-[#351820]/72 dark:text-[#ff9bad]",
+    info: "border-[#cfd6ff]/80 bg-[#f0f3ff]/66 text-[#3730a3] backdrop-blur dark:border-[#303b77] dark:bg-[#1d2447]/72 dark:text-[#aebfff]",
   };
 
   return (
-    <span className={clsx("inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium", tones[tone])}>
+    <span
+      className={clsx(
+        "inline-flex items-center rounded-md border px-2 py-1 text-xs font-medium",
+        tones[tone],
+      )}
+    >
       {children}
     </span>
   );
@@ -135,11 +153,17 @@ export function AddressText({ address }: { address: string }) {
   );
 }
 
-export function PrimaryLink({ href, children }: { href: string; children: React.ReactNode }) {
+export function PrimaryLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
   return (
     <Link
       href={href}
-      className="inline-flex h-10 items-center justify-center rounded-lg bg-[#2563eb] px-4 text-sm font-medium text-white shadow-sm transition hover:bg-[#1d4ed8]"
+      className="inline-flex h-10 items-center justify-center rounded-lg bg-[#2563eb] px-4 text-sm font-medium text-white shadow-[0_12px_26px_rgba(37,99,235,0.22)] transition hover:bg-[#1d4ed8]"
     >
       {children}
     </Link>

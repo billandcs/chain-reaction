@@ -213,6 +213,7 @@ Current implementation status:
 - `[x]` CR-071 Non-Custodial Trading Placeholder: trading remains disabled by feature flag and no private keys are stored.
 - `[x]` CR-080 App Layout: sidebar, mobile navigation, dark UI, responsive layout, and primary pages are implemented.
 - `[~]` CR-081 Data Visualization: portfolio, holdings, sparklines, and market table charts exist; wallet timeline and Smart Money accumulation charts still need work.
+- `[x]` CR-082 Homepage Logo And Glass UX Polish: custom logo mark, translucent navigation shell, frosted dashboard panels, and mobile/desktop homepage polish are implemented.
 - `[~]` CR-090 Testing: `npm test` works with adapter unit coverage; DB/API/UI smoke tests still need expansion.
 - `[x]` CR-091 GitHub Actions: CI workflow exists for install, lint, typecheck, test, and build; status badge waits for remote repo creation.
 - `[~]` CR-092 Local Backup And Export: wallet-label CSV export/import is implemented; full SQLite backup/restore and alert JSON export still need work.
@@ -779,6 +780,27 @@ Acceptance criteria:
 - Charts remain readable at common desktop sizes.
 - Filters do not break layout.
 - Empty data does not show fake charts.
+
+### CR-082: Homepage Logo And Glass UX Polish
+
+Goal:
+
+Make the dashboard feel like a professional, semi-transparent intelligence terminal without reducing scan speed.
+
+Deliverables:
+
+- Custom Chain Reaction logo mark.
+- Semi-transparent sidebar, top bar, and mobile navigation.
+- Frosted dashboard sections and metric tiles.
+- Consistent status pills and primary action styling.
+- Desktop and mobile homepage layout verification.
+
+Acceptance criteria:
+
+- Homepage visual system is consistent across navigation and dashboard panels.
+- Logo is recognizable at desktop and mobile sizes.
+- Text remains readable on translucent surfaces.
+- Mobile layout does not introduce horizontal overflow.
 
 ## Milestone 9: DevOps And Quality
 
