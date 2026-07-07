@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   ArrowDownRight,
   ArrowUpDown,
@@ -103,11 +104,27 @@ function TokenBadge({
 }) {
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${accentForSymbol(
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br ${accentForSymbol(
         row.symbol,
-      )} font-semibold text-white shadow-[0_0_24px_rgba(56,189,248,0.18)] ${large ? "size-9 text-sm" : "size-7 text-[11px]"}`}
+      )} font-semibold text-white shadow-[0_0_24px_rgba(56,189,248,0.18)] ring-1 ring-white/10 ${large ? "size-10 text-sm" : "size-8 text-[11px]"}`}
     >
-      {row.symbol.slice(0, 2)}
+      <span className="absolute inset-0 flex items-center justify-center">
+        {row.symbol.slice(0, 2)}
+      </span>
+      {row.image ? (
+        <Image
+          src={row.image}
+          alt=""
+          width={large ? 40 : 32}
+          height={large ? 40 : 32}
+          className="relative z-10 h-full w-full rounded-full object-cover"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={(event) => {
+            event.currentTarget.style.opacity = "0";
+          }}
+        />
+      ) : null}
     </span>
   );
 }
