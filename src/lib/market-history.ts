@@ -1,100 +1,136 @@
-export type MarketAssetId = "bitcoin" | "ethereum" | "solana" | "sui";
-
-export type MarketHistoryPoint = {
-  timestamp: number;
-  price: number;
-  volume: number;
-};
-
 export type MarketHistoryRow = {
-  id: MarketAssetId;
-  symbol: "BTC" | "ETH" | "SOL" | "SUI";
+  id: string;
+  rank: number;
+  marketCapRank: number | null;
+  symbol: string;
   name: string;
+  image?: string;
   source: "coingecko" | "fallback";
   currentPrice: number;
   change24h: number;
   change7d: number;
   change30d: number;
-  high30d: number;
-  low30d: number;
+  marketCap: number;
   volume24h: number;
-  points: MarketHistoryPoint[];
+  points: { timestamp: number; price: number }[];
   updatedAt: string;
 };
 
-const priorityAssets = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin", base: 108000 },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum", base: 3600 },
-  { id: "solana", symbol: "SOL", name: "Solana", base: 160 },
-  { id: "sui", symbol: "SUI", name: "Sui", base: 3.1 },
-] as const;
-
-type CoinGeckoMarketChart = {
-  prices?: [number, number][];
-  total_volumes?: [number, number][];
+type CoinGeckoMarket = {
+  id: string;
+  symbol: string;
+  name: string;
+  image?: string;
+  current_price: number | null;
+  market_cap: number | null;
+  market_cap_rank: number | null;
+  total_volume: number | null;
+  price_change_percentage_24h_in_currency?: number | null;
+  price_change_percentage_7d_in_currency?: number | null;
+  price_change_percentage_30d_in_currency?: number | null;
+  sparkline_in_7d?: {
+    price?: number[];
+  };
+  last_updated?: string;
 };
 
-function pctChange(current: number, previous: number) {
-  if (!previous) return 0;
-  return ((current - previous) / previous) * 100;
+const fallbackAssets = [
+  ["bitcoin", "BTC", "Bitcoin", 64073.42, 35620000000, 1260000000000, 1],
+  ["ethereum", "ETH", "Ethereum", 1799.9, 16350000000, 217000000000, 2],
+  ["tether", "USDT", "Tether", 1, 13200000000, 112000000000, 3],
+  ["solana", "SOL", "Solana", 82.24, 2610000000, 38600000000, 6],
+  ["usd-coin", "USDC", "USDC", 1, 2200000000, 32000000000, 7],
+  ["ripple", "XRP", "XRP", 0.52, 1850000000, 29200000000, 8],
+  ["dogecoin", "DOGE", "Dogecoin", 0.12, 1120000000, 17600000000, 9],
+  ["cardano", "ADA", "Cardano", 0.41, 920000000, 14500000000, 10],
+  ["sui", "SUI", "Sui", 0.75, 294670000, 2600000000, 20],
+  ["chainlink", "LINK", "Chainlink", 13.1, 280000000, 8100000000, 15],
+  ["avalanche-2", "AVAX", "Avalanche", 24.9, 250000000, 10100000000, 13],
+  ["tron", "TRX", "TRON", 0.13, 230000000, 11600000000, 12],
+  ["polkadot", "DOT", "Polkadot", 6.1, 210000000, 8700000000, 14],
+  ["the-open-network", "TON", "Toncoin", 5.8, 205000000, 20200000000, 11],
+  ["shiba-inu", "SHIB", "Shiba Inu", 0.000017, 198000000, 10000000000, 16],
+  ["litecoin", "LTC", "Litecoin", 73.5, 185000000, 5500000000, 18],
+  ["bitcoin-cash", "BCH", "Bitcoin Cash", 382, 175000000, 7500000000, 17],
+  ["near", "NEAR", "NEAR Protocol", 4.8, 160000000, 5300000000, 19],
+  ["aptos", "APT", "Aptos", 7.1, 150000000, 3600000000, 21],
+  ["uniswap", "UNI", "Uniswap", 8.4, 140000000, 5050000000, 22],
+] as const;
+
+function pctFallback(index: number, scale: number) {
+  return Math.sin(index * 1.7) * scale;
 }
 
-function nearestPrice(points: MarketHistoryPoint[], targetTimestamp: number) {
-  return points.reduce((nearest, point) =>
-    Math.abs(point.timestamp - targetTimestamp) < Math.abs(nearest.timestamp - targetTimestamp) ? point : nearest,
-  ).price;
+function fallbackSparkline(base: number, index: number) {
+  const now = Date.now();
+  return Array.from({ length: 96 }).map((_, pointIndex) => ({
+    timestamp: now - (95 - pointIndex) * 60 * 60 * 1000,
+    price: base * (1 + Math.sin((pointIndex + index) / 7) * 0.025 + Math.cos(pointIndex / 13) * 0.015),
+  }));
 }
 
-function summarize(
-  asset: (typeof priorityAssets)[number],
-  points: MarketHistoryPoint[],
-  source: MarketHistoryRow["source"],
-): MarketHistoryRow {
-  const ordered = points.sort((a, b) => a.timestamp - b.timestamp);
-  const latest = ordered.at(-1) ?? { timestamp: Date.now(), price: asset.base, volume: 0 };
-  const now = latest.timestamp;
-  const currentPrice = latest.price;
-  const oneDay = nearestPrice(ordered, now - 24 * 60 * 60 * 1000);
-  const sevenDays = nearestPrice(ordered, now - 7 * 24 * 60 * 60 * 1000);
-  const thirtyDays = ordered[0]?.price ?? currentPrice;
-  const prices = ordered.map((point) => point.price);
+function normalizeMarket(row: CoinGeckoMarket, index: number, source: MarketHistoryRow["source"]): MarketHistoryRow {
+  const sparkline = row.sparkline_in_7d?.price ?? [];
+  const now = row.last_updated ? new Date(row.last_updated).getTime() : Date.now();
+  const points = sparkline.length
+    ? sparkline.map((price, pointIndex) => ({
+        timestamp: now - (sparkline.length - 1 - pointIndex) * 60 * 60 * 1000,
+        price,
+      }))
+    : fallbackSparkline(row.current_price ?? 0, index);
 
   return {
-    id: asset.id,
-    symbol: asset.symbol,
-    name: asset.name,
+    id: row.id,
+    rank: index + 1,
+    marketCapRank: row.market_cap_rank,
+    symbol: row.symbol.toUpperCase(),
+    name: row.name,
+    image: row.image,
     source,
-    currentPrice,
-    change24h: pctChange(currentPrice, oneDay),
-    change7d: pctChange(currentPrice, sevenDays),
-    change30d: pctChange(currentPrice, thirtyDays),
-    high30d: Math.max(...prices, currentPrice),
-    low30d: Math.min(...prices, currentPrice),
-    volume24h: latest.volume,
-    points: ordered,
+    currentPrice: row.current_price ?? 0,
+    change24h: row.price_change_percentage_24h_in_currency ?? 0,
+    change7d: row.price_change_percentage_7d_in_currency ?? 0,
+    change30d: row.price_change_percentage_30d_in_currency ?? 0,
+    marketCap: row.market_cap ?? 0,
+    volume24h: row.total_volume ?? 0,
+    points,
     updatedAt: new Date(now).toISOString(),
   };
 }
 
-function fallbackSeries(asset: (typeof priorityAssets)[number]) {
-  const now = Date.now();
-  return Array.from({ length: 31 }).map((_, index) => {
-    const age = 30 - index;
-    const wave = Math.sin(index / 2.7) * 0.045;
-    const drift = (index - 15) * 0.0025;
-    const price = asset.base * (1 + wave + drift);
-    return {
-      timestamp: now - age * 24 * 60 * 60 * 1000,
-      price,
-      volume: asset.base * 120000 * (1 + Math.cos(index / 3) * 0.18),
-    };
-  });
+function fallbackRows(): MarketHistoryRow[] {
+  return fallbackAssets
+    .map(([id, symbol, name, price, volume, marketCap, marketCapRank], index) =>
+      normalizeMarket(
+        {
+          id,
+          symbol,
+          name,
+          current_price: price,
+          total_volume: volume,
+          market_cap: marketCap,
+          market_cap_rank: marketCapRank,
+          price_change_percentage_24h_in_currency: pctFallback(index, 3),
+          price_change_percentage_7d_in_currency: pctFallback(index + 2, 11),
+          price_change_percentage_30d_in_currency: pctFallback(index + 4, 24),
+          last_updated: new Date().toISOString(),
+        },
+        index,
+        "fallback",
+      ),
+    )
+    .sort((a, b) => b.volume24h - a.volume24h)
+    .map((row, index) => ({ ...row, rank: index + 1 }));
 }
 
-async function fetchAssetHistory(asset: (typeof priorityAssets)[number]) {
+export async function getPriorityMarketHistory(): Promise<MarketHistoryRow[]> {
   const params = new URLSearchParams({
     vs_currency: "usd",
-    days: "30",
+    order: "volume_desc",
+    per_page: "20",
+    page: "1",
+    sparkline: "true",
+    price_change_percentage: "24h,7d,30d",
   });
   const headers: HeadersInit = {
     accept: "application/json",
@@ -104,41 +140,25 @@ async function fetchAssetHistory(asset: (typeof priorityAssets)[number]) {
     headers["x-cg-demo-api-key"] = process.env.COINGECKO_API_KEY;
   }
 
-  const response = await fetch(`https://api.coingecko.com/api/v3/coins/${asset.id}/market_chart?${params}`, {
-    headers,
-    next: { revalidate: 300 },
-    signal: AbortSignal.timeout(9000),
-  });
+  try {
+    const response = await fetch(`https://api.coingecko.com/api/v3/coins/markets?${params}`, {
+      headers,
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(9000),
+    });
 
-  if (!response.ok) {
-    throw new Error(`CoinGecko ${asset.symbol} request failed with ${response.status}.`);
+    if (!response.ok) {
+      throw new Error(`CoinGecko markets request failed with ${response.status}.`);
+    }
+
+    const data = (await response.json()) as CoinGeckoMarket[];
+
+    if (!Array.isArray(data) || data.length < 5) {
+      throw new Error("CoinGecko returned too few market rows.");
+    }
+
+    return data.slice(0, 20).map((row, index) => normalizeMarket(row, index, "coingecko"));
+  } catch {
+    return fallbackRows();
   }
-
-  const data = (await response.json()) as CoinGeckoMarketChart;
-  const prices = data.prices ?? [];
-  const volumes = data.total_volumes ?? [];
-
-  if (prices.length < 2) {
-    throw new Error(`CoinGecko returned too few ${asset.symbol} points.`);
-  }
-
-  const points = prices.map(([timestamp, price], index) => ({
-    timestamp,
-    price,
-    volume: volumes[index]?.[1] ?? 0,
-  }));
-
-  return summarize(asset, points, "coingecko");
-}
-
-export async function getPriorityMarketHistory(): Promise<MarketHistoryRow[]> {
-  return Promise.all(
-    priorityAssets.map(async (asset) => {
-      try {
-        return await fetchAssetHistory(asset);
-      } catch {
-        return summarize(asset, fallbackSeries(asset), "fallback");
-      }
-    }),
-  );
 }

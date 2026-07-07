@@ -75,12 +75,13 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
       <div className="flex flex-col gap-3 border-b border-[#d8e0ec] px-4 py-3 dark:border-[#1d2838] sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#748096] dark:text-[#8795a8]">
-            Priority market history
+            Volume-ranked market history
           </div>
-          <h2 className="mt-1 text-base font-semibold">BTC / ETH / SOL / SUI Historical Quotes</h2>
+          <h2 className="mt-1 text-base font-semibold">Top 20 Coins by 24h Volume</h2>
         </div>
         <div className="flex flex-wrap gap-2">
-          <StatusPill tone="info">30D</StatusPill>
+          <StatusPill tone="info">Volume desc</StatusPill>
+          <StatusPill tone="neutral">7D spark</StatusPill>
           <StatusPill tone={rows.some((row) => row.source === "coingecko") ? "good" : "warn"}>
             {rows.some((row) => row.source === "coingecko") ? "CoinGecko live" : "Fallback"}
           </StatusPill>
@@ -88,19 +89,21 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
       </div>
 
       <div className="hidden overflow-hidden md:block">
-        <div className="grid grid-cols-[0.9fr_0.8fr_0.7fr_0.7fr_0.7fr_0.85fr_0.8fr_1.1fr] gap-3 border-b border-[#d8e0ec] px-4 py-2 text-[11px] font-medium uppercase tracking-[0.08em] text-[#748096] dark:border-[#1d2838] dark:text-[#8795a8]">
+        <div className="grid grid-cols-[0.55fr_1fr_0.8fr_0.68fr_0.68fr_0.68fr_0.85fr_0.85fr_1.05fr] gap-3 border-b border-[#d8e0ec] px-4 py-2 text-[11px] font-medium uppercase tracking-[0.08em] text-[#748096] dark:border-[#1d2838] dark:text-[#8795a8]">
+          <div>Rank</div>
           <div>Asset</div>
           <div>Price</div>
           <div>24h</div>
           <div>7d</div>
           <div>30d</div>
-          <div>30d Range</div>
+          <div>Market Cap</div>
           <div>Volume</div>
           <div>Trend</div>
         </div>
         <div className="divide-y divide-[#e2e7f0] dark:divide-[#223047]">
           {rows.map((row) => (
-            <div key={row.id} className="grid grid-cols-[0.9fr_0.8fr_0.7fr_0.7fr_0.7fr_0.85fr_0.8fr_1.1fr] items-center gap-3 px-4 py-3">
+            <div key={row.id} className="grid grid-cols-[0.55fr_1fr_0.8fr_0.68fr_0.68fr_0.68fr_0.85fr_0.85fr_1.05fr] items-center gap-3 px-4 py-3">
+              <div className="font-mono text-sm text-[#98a4b3]">#{row.rank}</div>
               <div>
                 <div className="font-semibold">{row.symbol}</div>
                 <div className="text-xs text-[#626b7a] dark:text-[#98a4b3]">{row.name}</div>
@@ -109,9 +112,7 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
               <ChangeCell value={row.change24h} />
               <ChangeCell value={row.change7d} />
               <ChangeCell value={row.change30d} />
-              <div className="font-mono text-xs text-[#626b7a] dark:text-[#98a4b3]">
-                {usd.format(row.low30d)} - {usd.format(row.high30d)}
-              </div>
+              <div className="font-mono text-sm">{compactUsd.format(row.marketCap)}</div>
               <div className="font-mono text-sm">{compactUsd.format(row.volume24h)}</div>
               <Sparkline row={row} />
             </div>
@@ -124,8 +125,11 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
           <div key={row.id} className="rounded-lg border border-[#dde4ef] bg-white p-3 dark:border-[#253246] dark:bg-[#101824]">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="font-semibold">{row.symbol}</div>
-                <div className="text-xs text-[#626b7a] dark:text-[#98a4b3]">{row.name}</div>
+                <div className="flex items-center gap-2 font-semibold">
+                  <span className="font-mono text-xs text-[#98a4b3]">#{row.rank}</span>
+                  {row.symbol}
+                </div>
+                <div className="mt-1 text-xs text-[#626b7a] dark:text-[#98a4b3]">{row.name}</div>
               </div>
               <div className="text-right">
                 <div className="font-mono font-semibold">{usd.format(row.currentPrice)}</div>
@@ -151,7 +155,7 @@ export function MarketHistoryTable({ rows }: { rows: MarketHistoryRow[] }) {
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs text-[#626b7a] dark:text-[#98a4b3]">
               <Database size={13} />
-              {row.source} · updated {formatTimeUtc(row.updatedAt)} UTC
+              {row.source} · mcap {compactUsd.format(row.marketCap)} · updated {formatTimeUtc(row.updatedAt)} UTC
             </div>
           </div>
         ))}
