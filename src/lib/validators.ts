@@ -48,6 +48,42 @@ export const tokenSchema = z.object({
   logoUrl: z.string().trim().url().optional().or(z.literal("")),
 });
 
+const optionalEvmAddress = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z
+    .string()
+    .trim()
+    .regex(/^0x[a-fA-F0-9]{40}$/, "Enter a valid EVM address.")
+    .optional(),
+);
+
+const optionalUsdThreshold = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.coerce.number().positive("Threshold must be greater than 0.").optional(),
+);
+
+export const alertRuleTypes = [
+  "wallet_flow_over_usd",
+  "smart_wallet_bought_token",
+  "watched_token_inflow_spike",
+  "portfolio_value_drop",
+  "new_token_in_smart_wallet",
+] as const;
+
+export const alertRuleSchema = z.object({
+  name: z.string().trim().min(1, "Rule name is required.").max(100),
+  type: z.enum(alertRuleTypes),
+  thresholdUsd: optionalUsdThreshold,
+  tokenAddress: optionalEvmAddress,
+  walletId: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().optional(),
+  ),
+  enabled: z.coerce.boolean().default(true),
+});
+
+export const alertRuleUpdateSchema = alertRuleSchema.partial();
+
 export const labelSchema = z.object({
   walletId: z.string().optional(),
   address: z.string().trim().optional(),
@@ -61,3 +97,4 @@ export const labelSchema = z.object({
 
 export type WalletInput = z.infer<typeof walletSchema>;
 export type TokenInput = z.infer<typeof tokenSchema>;
+export type AlertRuleInput = z.infer<typeof alertRuleSchema>;

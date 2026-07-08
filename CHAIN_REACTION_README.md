@@ -190,7 +190,7 @@ Status legend:
 
 Current implementation status:
 
-- `[!]` CR-001 GitHub Repo Automation: local git repo, commits, remote URL, CI, and `npm run github:init` script exist; remote repo creation/push is blocked until GitHub CLI or `GITHUB_TOKEN` is configured.
+- `[~]` CR-001 GitHub Repo Automation: GitHub repo, local remote, commits, push flow, CI, and `npm run github:init` script exist; fresh automated repo creation still needs GitHub CLI or `GITHUB_TOKEN`.
 - `[x]` CR-002 Project Scaffold: Next.js, TypeScript, Tailwind, Prisma, SQLite init script, ESLint, Prettier, `.env.example`, and app shell are implemented.
 - `[~]` CR-003 Local Settings Center: settings page and provider readiness checks exist; live RPC/GitHub connection tests still need provider credentials.
 - `[x]` CR-010 Prisma Schema And Database Design: core schema, SQLite init SQL, seed script, repositories, and demo data are implemented.
@@ -205,8 +205,8 @@ Current implementation status:
 - `[x]` CR-040 Local Wallet Label Database: manual label creation, label type, confidence, notes, source URL, CSV import, CSV export, bulk upload, and label display are implemented.
 - `[~]` CR-041 Smart Wallet Scoring: simple transparent local score is visible; scoring job and sortable score column still need work.
 - `[~]` CR-042 Smart Money Dashboard: score and label dashboard exists; top buys/sells, accumulations, and time filters still need work.
-- `[~]` CR-050 Alert Rules Engine: alert models, seed rule/event, and history UI exist; rule management and evaluation worker still need work.
-- `[~]` CR-051 Notification Channels: in-app alert history exists; read state and desktop notifications still need work.
+- `[~]` CR-050 Alert Rules Engine: alert models, seed rule/event, rule creation, enable/pause/delete actions, and history UI exist; evaluation worker still needs work.
+- `[~]` CR-051 Notification Channels: in-app alert history, unread count, read/unread actions, and mark-all-read exist; desktop notifications still need work.
 - `[~]` CR-060 AI Summary Engine: AI report storage and report library exist; generation endpoints/prompts still need work.
 - `[ ]` CR-061 Chat With Your Onchain Data.
 - `[~]` CR-070 Research-To-Action Panel: non-trading research guardrails are visible; token risk/liquidity/action panel still needs work.
